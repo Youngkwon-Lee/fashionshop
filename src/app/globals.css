@@ -52,19 +52,19 @@
   --ring: 240 5.9% 10%;
   --radius: 0.5rem;
 
-  /* O-won colors */
-  --owon-primary: #3b3834;
-  --owon-secondary: #9f9c97;
-  --owon-brown: #8a664c;
-  --owon-beige: #c3ad99;
-  --owon-light-beige: #cdc1ac;
-  --owon-gray: #c9cbc9;
-  --owon-blue: #5bc2be;
+  /* Rosée colors */
+  --rosee-primary: #3b3834;
+  --rosee-secondary: #9f9c97;
+  --rosee-brown: #8a664c;
+  --rosee-beige: #c3ad99;
+  --rosee-light-beige: #cdc1ac;
+  --rosee-gray: #c9cbc9;
+  --rosee-blue: #5bc2be;
 }
 
 body {
   font-family: 'Pretendard', sans-serif;
-  color: var(--owon-primary);
+  color: var(--rosee-primary);
   background-color: #fff;
 }
 

@@ -24,7 +24,7 @@ const bestProducts: Product[] = [
     price: '39,000',
     imageUrl: 'https://ext.same-assets.com/288811423/4282878971.webp',
     hoverImageUrl: 'https://ext.same-assets.com/731913575/2870876322.webp',
-    link: '/product/---/1801/category/24/display/1/',
+    link: '/product/1801',
     colors: 6,
     isNew: false,
     isSale: false
@@ -36,7 +36,7 @@ const bestProducts: Product[] = [
     originalPrice: '49,000',
     imageUrl: 'https://ext.same-assets.com/1031444258/1934067122.webp',
     hoverImageUrl: 'https://ext.same-assets.com/4212348796/763926699.webp',
-    link: '/product/-----/1431/category/24/display/1/',
+    link: '/product/1431',
     isSale: true,
     isNew: false
   },
@@ -46,7 +46,7 @@ const bestProducts: Product[] = [
     price: '42,000',
     imageUrl: 'https://ext.same-assets.com/1789176774/491349818.webp',
     hoverImageUrl: 'https://ext.same-assets.com/608899003/1613826622.webp',
-    link: '/product/---/1737/category/24/display/1/',
+    link: '/product/1737',
     isNew: false,
     isSale: false
   },
@@ -56,7 +56,7 @@ const bestProducts: Product[] = [
     price: '59,000',
     imageUrl: 'https://ext.same-assets.com/3755829324/2300253070.webp',
     hoverImageUrl: 'https://ext.same-assets.com/3070283701/2532160922.webp',
-    link: '/product/---/1664/category/24/display/1/',
+    link: '/product/1664',
     isNew: false,
     isSale: false
   }

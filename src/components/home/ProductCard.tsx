@@ -11,7 +11,7 @@ interface ProductCardProps {
   originalPrice?: string;
   imageUrl: string;
   hoverImageUrl?: string;
-  link: string;
+  link?: string;
   isNew?: boolean;
   isSale?: boolean;
   colors?: number;
@@ -29,9 +29,11 @@ const ProductCard = ({
   isSale = false,
   colors,
 }: ProductCardProps) => {
+  const productLink = link || `/product/${id}`;
+
   return (
     <div className="product-card group">
-      <Link href={link} className="block relative">
+      <Link href={productLink} className="block relative">
         <div className="relative overflow-hidden pb-[125%]">
           {/* Main Image */}
           <Image
@@ -67,7 +69,7 @@ const ProductCard = ({
 
       <div className="product-card-info">
         <h3 className="product-card-title">
-          <Link href={link}>{title}</Link>
+          <Link href={productLink}>{title}</Link>
         </h3>
         <div className="flex items-center gap-2">
           {isSale && originalPrice && (

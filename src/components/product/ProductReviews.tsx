@@ -2,167 +2,191 @@
 
 import React, { useState } from 'react';
 import Image from 'next/image';
-import { ChevronDown, ChevronUp, Star } from 'lucide-react';
-
-// Sample review data
-const sampleReviews = [
-  {
-    id: 1,
-    username: '김*영',
-    rating: 5,
-    date: '2023-12-15',
-    content: '색상도 예쁘고 따뜻해요. 기본 아이템이라 여러 옷에 매치하기 좋아요!',
-    imageUrl: 'https://images.unsplash.com/photo-1584030373081-f37b019b2445?w=800',
-  },
-  {
-    id: 2,
-    username: '박*준',
-    rating: 4,
-    date: '2023-12-10',
-    content: '가볍고 편하게 입기 좋아요. 다양한 코디에 활용하고 있습니다.',
-  },
-  {
-    id: 3,
-    username: '이*나',
-    rating: 5,
-    date: '2023-12-05',
-    content: '배송도 빠르고 제품도 좋아요! 사이즈도 딱 맞아서 만족합니다.',
-    imageUrl: 'https://images.unsplash.com/photo-1584030373052-6f0a5f00d1a3?w=800',
-  },
-  {
-    id: 4,
-    username: '최*석',
-    rating: 3,
-    date: '2023-11-30',
-    content: '생각보다 얇아요. 초봄이나 가을에 입기 좋을 것 같습니다.',
-  },
-  {
-    id: 5,
-    username: '정*현',
-    rating: 5,
-    date: '2023-11-25',
-    content: '색감이 정말 예뻐요! 여러 색상으로 구매하고 싶네요.',
-    imageUrl: 'https://images.unsplash.com/photo-1583846552345-d2192d5c6fcd?w=800',
-  }
-];
+import { Star, ThumbsUp } from 'lucide-react';
+import { Review, ReviewSummary } from '@/types/review';
+import ReviewForm from './ReviewForm';
 
 interface ProductReviewsProps {
   productId: string;
+  reviews: Review[];
+  summary: ReviewSummary;
+  productOptions: {
+    color: string;
+    size: string;
+  };
 }
 
-const ProductReviews = ({ productId }: ProductReviewsProps) => {
-  const [expandedReview, setExpandedReview] = useState<number | null>(null);
+const ProductReviews = ({ productId, reviews: initialReviews, summary: initialSummary, productOptions }: ProductReviewsProps) => {
+  const [reviews, setReviews] = useState(initialReviews);
+  const [summary, setSummary] = useState(initialSummary);
+  const [sortBy, setSortBy] = useState<'recent' | 'helpful'>('recent');
+  const [selectedRating, setSelectedRating] = useState<number | null>(null);
 
-  const toggleReview = (reviewId: number) => {
-    setExpandedReview(expandedReview === reviewId ? null : reviewId);
+  const handleReviewSuccess = () => {
+    // TODO: 리뷰 목록과 요약 정보를 새로 불러오기
+    window.location.reload();
+  };
+
+  const filteredReviews = reviews.filter(review => 
+    selectedRating ? review.rating === selectedRating : true
+  );
+
+  const sortedReviews = [...filteredReviews].sort((a, b) => {
+    if (sortBy === 'recent') {
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    }
+    return b.helpful - a.helpful;
+  });
+
+  const renderStars = (rating: number) => {
+    return Array.from({ length: 5 }).map((_, index) => (
+      <Star
+        key={index}
+        className={`w-4 h-4 ${
+          index < rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
+        }`}
+      />
+    ));
   };
 
   return (
-    <div className="py-12 border-t border-gray-200">
-      <h2 className="text-xl font-medium mb-6">Reviews ({sampleReviews.length})</h2>
+    <div className="mt-16">
+      <h2 className="text-xl font-medium mb-6">상품 리뷰</h2>
 
-      <div className="mb-6">
-        <div className="bg-gray-50 p-6 flex flex-col md:flex-row items-center">
-          <div className="text-center md:text-left md:w-1/3 mb-4 md:mb-0">
-            <div className="text-3xl font-bold mb-2">4.4</div>
-            <div className="flex justify-center md:justify-start">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <Star
-                  key={star}
-                  className={`w-4 h-4 ${star <= 4 ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`}
-                />
-              ))}
+      {/* Review Form */}
+      <ReviewForm
+        productId={productId}
+        productOptions={productOptions}
+        onSuccess={handleReviewSuccess}
+      />
+
+      {/* Review Summary */}
+      <div className="bg-gray-50 p-6 rounded-lg mb-8">
+        <div className="flex items-center gap-8">
+          <div className="text-center">
+            <div className="text-3xl font-bold mb-1">{summary.averageRating.toFixed(1)}</div>
+            <div className="flex items-center justify-center mb-1">
+              {renderStars(Math.round(summary.averageRating))}
             </div>
-            <div className="text-sm text-gray-500 mt-1">총 {sampleReviews.length}개 리뷰</div>
+            <div className="text-sm text-gray-500">
+              {summary.totalReviews}개의 리뷰
+            </div>
           </div>
 
-          <div className="md:w-2/3">
-            <div className="space-y-2">
-              {[5, 4, 3, 2, 1].map((rating) => {
-                const count = sampleReviews.filter(r => r.rating === rating).length;
-                const percentage = Math.round((count / sampleReviews.length) * 100);
-
-                return (
-                  <div key={rating} className="flex items-center gap-3">
-                    <div className="flex items-center gap-1 w-12">
-                      <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                      <span className="text-sm">{rating}</span>
-                    </div>
-                    <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-yellow-400 rounded-full"
-                        style={{ width: `${percentage}%` }}
-                      ></div>
-                    </div>
-                    <div className="text-xs text-gray-500 w-10 text-right">{percentage}%</div>
-                  </div>
-                );
-              })}
-            </div>
+          <div className="flex-1">
+            {[5, 4, 3, 2, 1].map((rating) => (
+              <button
+                key={rating}
+                className="flex items-center gap-2 w-full mb-1 hover:bg-gray-100 p-1 rounded"
+                onClick={() => setSelectedRating(selectedRating === rating ? null : rating)}
+              >
+                <div className="flex items-center">
+                  {renderStars(rating)}
+                </div>
+                <div className="w-full bg-gray-200 h-2 rounded-full">
+                  <div
+                    className="bg-yellow-400 h-2 rounded-full"
+                    style={{
+                      width: `${(summary.ratingDistribution[rating] / summary.totalReviews) * 100}%`
+                    }}
+                  />
+                </div>
+                <span className="text-sm text-gray-500 min-w-[40px]">
+                  {summary.ratingDistribution[rating]}
+                </span>
+              </button>
+            ))}
           </div>
         </div>
       </div>
 
-      <div className="space-y-6">
-        {sampleReviews.map((review) => (
-          <div key={review.id} className="border-b border-gray-200 pb-6">
-            <div className="flex justify-between mb-2">
-              <div>
-                <span className="font-medium">{review.username}</span>
-                <span className="text-gray-500 text-sm ml-2">{review.date}</span>
-              </div>
-              <div className="flex">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <Star
-                    key={star}
-                    className={`w-3 h-3 ${star <= review.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`}
-                  />
-                ))}
-              </div>
-            </div>
-
-            {review.imageUrl && (
-              <div className="mb-3">
-                <Image
-                  src={review.imageUrl}
-                  alt={`Review by ${review.username}`}
-                  width={120}
-                  height={120}
-                  className="object-cover rounded"
-                />
-              </div>
-            )}
-
-            <div className={expandedReview === review.id ? '' : 'line-clamp-2'}>
-              <p className="text-sm text-gray-700">{review.content}</p>
-            </div>
-
-            {review.content.length > 100 && (
-              <button
-                className="text-xs text-gray-500 mt-2 flex items-center"
-                onClick={() => toggleReview(review.id)}
-              >
-                {expandedReview === review.id ? (
-                  <>
-                    <ChevronUp className="w-3 h-3 mr-1" />
-                    접기
-                  </>
-                ) : (
-                  <>
-                    <ChevronDown className="w-3 h-3 mr-1" />
-                    더 보기
-                  </>
-                )}
-              </button>
-            )}
-          </div>
-        ))}
+      {/* Sort Controls */}
+      <div className="flex justify-between items-center mb-6">
+        <div className="flex gap-2">
+          <button
+            className={`px-3 py-1 rounded ${
+              sortBy === 'recent'
+                ? 'bg-gray-900 text-white'
+                : 'bg-gray-100'
+            }`}
+            onClick={() => setSortBy('recent')}
+          >
+            최신순
+          </button>
+          <button
+            className={`px-3 py-1 rounded ${
+              sortBy === 'helpful'
+                ? 'bg-gray-900 text-white'
+                : 'bg-gray-100'
+            }`}
+            onClick={() => setSortBy('helpful')}
+          >
+            도움순
+          </button>
+        </div>
+        {selectedRating && (
+          <button
+            className="text-sm text-gray-500 hover:text-gray-700"
+            onClick={() => setSelectedRating(null)}
+          >
+            필터 초기화
+          </button>
+        )}
       </div>
 
-      <div className="mt-8 text-center">
-        <button className="px-6 py-2 border border-gray-300 hover:border-black transition-colors">
-          더 많은 리뷰 보기
-        </button>
+      {/* Review List */}
+      <div className="space-y-8">
+        {sortedReviews.map((review) => (
+          <div key={review.id} className="border-b pb-8">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="flex">
+                {renderStars(review.rating)}
+              </div>
+              <span className="text-sm text-gray-500">|</span>
+              <span className="text-sm font-medium">{review.userName}</span>
+              {review.isVerifiedPurchase && (
+                <>
+                  <span className="text-sm text-gray-500">|</span>
+                  <span className="text-sm text-green-600">구매 확인</span>
+                </>
+              )}
+            </div>
+
+            <div className="text-sm text-gray-500 mb-3">
+              {review.productOptions.color} / {review.productOptions.size} • {
+                new Date(review.createdAt).toLocaleDateString('ko-KR', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                })
+              }
+            </div>
+
+            <p className="text-gray-700 mb-4 whitespace-pre-line">
+              {review.content}
+            </p>
+
+            {review.images && review.images.length > 0 && (
+              <div className="flex gap-2 mb-4">
+                {review.images.map((image, index) => (
+                  <div key={index} className="relative w-20 h-20">
+                    <Image
+                      src={image}
+                      alt={`Review image ${index + 1}`}
+                      fill
+                      className="object-cover rounded"
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <button className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700">
+              <ThumbsUp className="w-4 h-4" />
+              도움됨 {review.helpful}
+            </button>
+          </div>
+        ))}
       </div>
     </div>
   );

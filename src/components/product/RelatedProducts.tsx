@@ -1,54 +1,43 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-
-interface RelatedProduct {
-  id: string;
-  title: string;
-  price: string;
-  originalPrice?: string;
-  imageUrl: string;
-  link: string;
-  isSale?: boolean;
-}
+import { RelatedProduct } from '@/types/product';
+import { formatPrice } from '@/lib/api/products';
 
 interface RelatedProductsProps {
   products: RelatedProduct[];
-  title?: string;
+  title: string;
 }
 
-const RelatedProducts = ({ products, title = "관련 상품" }: RelatedProductsProps) => {
+const RelatedProducts = ({ products, title }: RelatedProductsProps) => {
   return (
-    <div className="py-12">
+    <div className="mt-16">
       <h2 className="text-xl font-medium mb-6">{title}</h2>
-
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {products.map((product) => (
-          <div key={product.id} className="group">
-            <Link href={product.link} className="block">
-              <div className="relative aspect-[3/4] mb-3 overflow-hidden">
-                <Image
-                  src={product.imageUrl}
-                  alt={product.title}
-                  fill
-                  className="object-cover transition-transform duration-300 group-hover:scale-105"
-                />
-                {product.isSale && (
-                  <div className="absolute top-2 left-2">
-                    <span className="bg-red-500 text-white text-xs px-2 py-1">SALE</span>
-                  </div>
-                )}
-              </div>
-
-              <h3 className="text-sm font-medium mb-1">{product.title}</h3>
-              <div className="flex items-baseline gap-2">
-                {product.originalPrice && (
-                  <span className="text-gray-500 line-through text-xs">{product.originalPrice}</span>
-                )}
-                <span className="text-sm">{product.price}</span>
-              </div>
-            </Link>
-          </div>
+          <Link
+            key={product.id}
+            href={product.link}
+            className="group"
+          >
+            <div className="relative aspect-[3/4] mb-3">
+              <Image
+                src={product.imageUrl}
+                alt={product.title}
+                fill
+                className="object-cover group-hover:opacity-80 transition-opacity"
+              />
+            </div>
+            <h3 className="text-sm mb-1 group-hover:underline">{product.title}</h3>
+            <div className="text-sm">
+              {product.originalPrice && (
+                <span className="text-gray-500 line-through mr-2">
+                  {formatPrice(product.originalPrice)}
+                </span>
+              )}
+              <span className="font-medium">{formatPrice(product.price)}</span>
+            </div>
+          </Link>
         ))}
       </div>
     </div>

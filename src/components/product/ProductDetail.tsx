@@ -5,71 +5,59 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { MinusIcon, PlusIcon, Share2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-
-interface Color {
-  name: string;
-  code: string;
-  available: boolean;
-}
-
-interface RelatedProduct {
-  id: string;
-  title: string;
-  price: string;
-  originalPrice?: string;
-  imageUrl: string;
-  link: string;
-  isSale?: boolean;
-}
+import { useCart } from '@/contexts/CartContext';
+import { Product } from '@/types/product';
+import { formatPrice } from '@/lib/api/products';
 
 interface ProductDetailProps {
-  product: {
-    id: string;
-    title: string;
-    price: string;
-    originalPrice?: string;
-    description: string;
-    details: string[];
-    imageUrls: string[];
-    colors: Color[];
-    sizes: string[];
-    category: string;
-    deliveryInfo: string;
-    productionPeriod: string;
-    relatedProducts: RelatedProduct[];
-  };
+  product: Product;
+  onOptionsChange?: (options: { color: string; size: string }) => void;
 }
 
-const ProductDetail = ({ product }: ProductDetailProps) => {
+const ProductDetail = ({ product, onOptionsChange }: ProductDetailProps) => {
   const router = useRouter();
+  const { addToCart } = useCart();
   const [currentImage, setCurrentImage] = useState(0);
-  const [selectedColor, setSelectedColor] = useState(product.colors.find(c => c.available)?.name || '');
+  const [selectedColor, setSelectedColor] = useState(product.colors[0]?.name || '');
   const [selectedSize, setSelectedSize] = useState(product.sizes[0] || '');
   const [quantity, setQuantity] = useState(1);
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
 
-  const incrementQuantity = () => {
-    setQuantity(prev => prev + 1);
+  const handleColorChange = (color: string) => {
+    setSelectedColor(color);
+    onOptionsChange?.({ color, size: selectedSize });
   };
 
-  const decrementQuantity = () => {
-    if (quantity > 1) {
-      setQuantity(prev => prev - 1);
-    }
+  const handleSizeChange = (size: string) => {
+    setSelectedSize(size);
+    onOptionsChange?.({ color: selectedColor, size });
+  };
+
+  const handleQuantityChange = (value: number) => {
+    const newQuantity = Math.max(1, Math.min(10, value));
+    setQuantity(newQuantity);
   };
 
   const handleAddToCart = () => {
     if (!selectedColor || !selectedSize) {
-      alert('컬러와 사이즈를 선택해주세요.');
+      alert('색상과 사이즈를 선택해주세요.');
       return;
     }
 
-    // In a real app, we would add to cart in the state management
-    // For now, we'll just show a message
-    alert(`장바구니에 추가되었습니다: ${product.title} (${selectedColor}, ${selectedSize}, ${quantity}개)`);
+    addToCart({
+      id: product.id,
+      title: product.title,
+      price: product.price,
+      imageUrl: product.imageUrls[0],
+      color: selectedColor,
+      size: selectedSize,
+      quantity
+    });
 
-    // This would navigate to the cart page in a real implementation
-    // router.push('/cart');
+    const confirmed = confirm('장바구니에 상품이 담겼습니다. 장바구니로 이동하시겠습니까?');
+    if (confirmed) {
+      router.push('/cart');
+    }
   };
 
   const handleBuyNow = () => {
@@ -77,15 +65,22 @@ const ProductDetail = ({ product }: ProductDetailProps) => {
       alert('컬러와 사이즈를 선택해주세요.');
       return;
     }
+    
+    addToCart({
+      id: product.id,
+      title: product.title,
+      price: product.price,
+      imageUrl: product.imageUrls[0],
+      color: selectedColor,
+      size: selectedSize,
+      quantity
+    });
 
-    // Navigate to checkout with the product
-    alert(`즉시 구매: ${product.title} (${selectedColor}, ${selectedSize}, ${quantity}개)`);
-    // router.push('/checkout');
+    router.push('/checkout');
   };
 
   const calculateTotalPrice = () => {
-    const priceValue = parseInt(product.price.replace(/,/g, ''));
-    return (priceValue * quantity).toLocaleString();
+    return formatPrice(product.price * quantity);
   };
 
   return (
@@ -125,9 +120,9 @@ const ProductDetail = ({ product }: ProductDetailProps) => {
 
         <div className="flex items-baseline gap-2 mb-6">
           {product.originalPrice && (
-            <span className="text-gray-500 line-through">{product.originalPrice}원</span>
+            <span className="text-gray-500 line-through">{formatPrice(product.originalPrice)}</span>
           )}
-          <span className="text-xl font-semibold">{product.price}원</span>
+          <span className="text-xl font-semibold">{formatPrice(product.price)}</span>
         </div>
 
         {/* Description */}
@@ -159,7 +154,7 @@ const ProductDetail = ({ product }: ProductDetailProps) => {
                 } ${!color.available && 'opacity-40'}`}
                 style={{ backgroundColor: color.code }}
                 disabled={!color.available}
-                onClick={() => color.available && setSelectedColor(color.name)}
+                onClick={() => handleColorChange(color.name)}
                 aria-label={color.name}
                 title={color.available ? color.name : `${color.name} (품절)`}
               />
@@ -182,7 +177,7 @@ const ProductDetail = ({ product }: ProductDetailProps) => {
                     ? 'border-black bg-black text-white'
                     : 'border-gray-300 hover:border-gray-400'
                 }`}
-                onClick={() => setSelectedSize(size)}
+                onClick={() => handleSizeChange(size)}
               >
                 {size}
               </button>
@@ -196,7 +191,7 @@ const ProductDetail = ({ product }: ProductDetailProps) => {
           <div className="flex items-center w-32 border border-gray-300">
             <button
               className="w-8 h-8 flex items-center justify-center text-gray-500"
-              onClick={decrementQuantity}
+              onClick={() => handleQuantityChange(quantity - 1)}
               disabled={quantity <= 1}
             >
               <MinusIcon className="w-4 h-4" />
@@ -204,7 +199,7 @@ const ProductDetail = ({ product }: ProductDetailProps) => {
             <div className="flex-1 text-center">{quantity}</div>
             <button
               className="w-8 h-8 flex items-center justify-center text-gray-500"
-              onClick={incrementQuantity}
+              onClick={() => handleQuantityChange(quantity + 1)}
             >
               <PlusIcon className="w-4 h-4" />
             </button>
@@ -214,7 +209,7 @@ const ProductDetail = ({ product }: ProductDetailProps) => {
         {/* Total Price */}
         <div className="flex justify-between items-center mb-6 py-4 border-t border-b border-gray-200">
           <p className="font-medium">Total</p>
-          <p className="text-lg font-bold">{calculateTotalPrice()}원</p>
+          <p className="text-lg font-bold">{calculateTotalPrice()}</p>
         </div>
 
         {/* Action Buttons */}

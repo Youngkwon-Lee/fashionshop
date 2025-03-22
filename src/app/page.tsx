@@ -1,8 +1,14 @@
+"use client";
+
+import React, { useEffect, useState } from 'react';
 import MainLayout from '@/components/layout/MainLayout';
 import HeroSlider from '@/components/home/HeroSlider';
 import CategoryBanner from '@/components/home/CategoryBanner';
 import ProductSection from '@/components/home/ProductSection';
 import ReviewSection from '@/components/home/ReviewSection';
+import ProductCard from '@/components/product/ProductCard';
+import { getProducts } from '@/lib/api/products';
+import { Product } from '@/types/product';
 
 // Sample product data for New Arrivals
 const newArrivalsData = [
@@ -77,6 +83,46 @@ const weeklyBestData = [
 ];
 
 export default function Home() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const data = await getProducts();
+        setProducts(data as Product[]);
+      } catch (error) {
+        console.error('상품 목록 로딩 실패:', error);
+        setError('상품 목록을 불러오는데 실패했습니다.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <MainLayout>
+        <div className="container-rosee py-16">
+          <div className="text-center">로딩 중...</div>
+        </div>
+      </MainLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <MainLayout>
+        <div className="container-rosee py-16">
+          <div className="text-center text-red-600">{error}</div>
+        </div>
+      </MainLayout>
+    );
+  }
+
   return (
     <MainLayout>
       <HeroSlider />
@@ -94,6 +140,14 @@ export default function Home() {
         products={weeklyBestData}
       />
       <ReviewSection />
+      <div className="container-rosee py-16">
+        <h1 className="text-2xl font-bold mb-8">신상품</h1>
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          {products.map((product) => (
+            <ProductCard key={product.id} product={product} />
+          ))}
+        </div>
+      </div>
     </MainLayout>
   );
 }
